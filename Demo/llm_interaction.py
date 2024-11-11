@@ -10,10 +10,9 @@ from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 # Set up logging to suppress debug messages
 logging.basicConfig(level=logging.WARNING)  # Only show warnings and errors
 
-# Define a custom class for handling the prompt and parsing
 class CustomPrompt:
     def __init__(self):
-        # Define response schemas for output parsing
+        # output parsing
         self.sentiment = ResponseSchema(
             name="sentiment",
             description="Analyze sentiment state if user is angry/sad/neutral/happy/excited."
@@ -47,7 +46,6 @@ class CustomPrompt:
     def parse_response(self, response: str):
         return self.output_parser.parse(response)
 
-# Define the main class to handle the LLM and conversation chain
 class LLMHandler:
     def __init__(self):
         load_dotenv()
@@ -70,10 +68,9 @@ class LLMHandler:
         self.conversation_chain = ConversationChain(
             llm=self.llm,
             memory=self.memory,
-            verbose=False  # Suppress verbose output
+            verbose=False  
         )
         
-        # Initialize custom prompt for creating and parsing messages
         self.prompt = CustomPrompt()
 
     def handle_conversation(self, user_input: str):
