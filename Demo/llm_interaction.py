@@ -1,101 +1,97 @@
 import os
+import logging
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from langchain_huggingface import HuggingFaceEndpoint  # For the endpoint connection
 from langchain.memory import ConversationBufferMemory
-from langchain.schema import HumanMessage, SystemMessage
+from langchain.chains import ConversationChain
+from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 
+# Set up logging to suppress debug messages
+logging.basicConfig(level=logging.WARNING)  # Only show warnings and errors
 
-class llm_Demo:
+# Define a custom class for handling the prompt and parsing
+class CustomPrompt:
+    def __init__(self):
+        # Define response schemas for output parsing
+        self.sentiment = ResponseSchema(
+            name="sentiment",
+            description="Analyze sentiment state if user is angry/sad/neutral/happy/excited."
+        )
+        self.response = ResponseSchema(
+            name="response",
+            description="Provide a professional response to the tweet within the travel domain."
+        )
+        self.output_parser = StructuredOutputParser.from_response_schemas(
+            [self.sentiment, self.response]
+        )
+
+    def create_prompt(self, text: str):
+        format_instructions = self.output_parser.get_format_instructions()
+        review_template = """
+        The following text is a tweet from a user.
+        Extract the following information:
+
+        - sentiment: Analyze if the user is angry, sad, neutral, happy, or excited.
+        - response: Provide a professional response to the tweet within the travel domain.
+
+        Text: {text}
+
+        {format_instructions}
+        """
+        # Create and format the chat prompt
+        prompt = ChatPromptTemplate.from_template(template=review_template)
+        messages = prompt.format_messages(text=text, format_instructions=format_instructions)
+        return messages
+
+    def parse_response(self, response: str):
+        return self.output_parser.parse(response)
+
+# Define the main class to handle the LLM and conversation chain
+class LLMHandler:
     def __init__(self):
         load_dotenv()
-        TOKEN = os.environ["HF_TOKEN"]
+        TOKEN = os.getenv("HF_TOKEN")
+        if not TOKEN:
+            raise ValueError("HF_TOKEN environment variable is not set.")
+        
         self._repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
         model_kwargs = {"max_length": 128, "token": TOKEN}
-        self._llm = HuggingFaceEndpoint(
+        
+        # Initialize Hugging Face endpoint
+        self.llm = HuggingFaceEndpoint(
             repo_id=self._repo_id,
             temperature=0.5,
             model_kwargs=model_kwargs
         )
-
-        # Initialize conversation memory to keep track of the dialog
-        self.memory = ConversationBufferMemory()
-
-    def get_repo_details(self) -> str:
-        return self._repo_id
-
-    def get_llm(self) -> str:
-        return self._llm
-
-    def _set_template(self, query):
-        """
-        Sets the template based on the customer query using gating logic.
-        The chatbot's responses change based on the context of the query.
-        """
-        if "haven’t received" in query or "late" in query:
-            # Empathy chain for issues like delivery delays
-            template_s = """
-                You are a customer service agent using empathy. 
-                The customer said: "{query}"
-                Your response: "I understand how frustrating this might be. Let me help you as quickly as possible."
-            """
-        elif "broken" in query or "not working" in query:
-            # Problem-solving chain for technical issues
-            template_s = """
-                You are a customer service agent helping to solve a problem.
-                The customer said: "{query}"
-                Your response: "I’m sorry you’re experiencing this issue. Let me guide you step-by-step to resolve it."
-            """
-        else:
-            # Escalation chain for unresolved issues
-            template_s = """
-                You are a customer service agent handling escalations.
-                The customer said: "{query}"
-                Your response: "It looks like I’m unable to assist you fully at the moment. I’m escalating your issue to our support team."
-            """
-
-        prompt_template = ChatPromptTemplate.from_template(template_s)
-
-        # Format the user message
-        self.user_messages = prompt_template.format_messages(query=query)
-
-    def initiate_chat(self, customer_query):
-        # Save the customer query in memory
-        # Retrieve past conversation from memory
-        past_conversation = self.memory.load_memory_variables({})
-
-        # Add context from memory to the chatbot
-        self._set_template(customer_query)
         
-        # Initialize chat model
-        chat_model = ChatHuggingFace(llm=self._llm)
+        # Initialize conversation memory and chain without verbosity
+        self.memory = ConversationBufferMemory()
+        self.conversation_chain = ConversationChain(
+            llm=self.llm,
+            memory=self.memory,
+            verbose=False  # Suppress verbose output
+        )
+        
+        # Initialize custom prompt for creating and parsing messages
+        self.prompt = CustomPrompt()
 
-
-        # Invoke response
-        response = chat_model.invoke(self.user_messages)
-
-        # Save the chatbot's response in memory
-        self.memory.save_context(inputs={"customer_query": customer_query},outputs= {"bot_response": response.content})
-
-        # Print past conversations along with the latest response
-        #print(f"Past Conversations: {past_conversation}")
-        print(f"Bot Response: {response.content}")
-
+    def handle_conversation(self, user_input: str):
+        # Create formatted prompt messages
+        formatted_prompt = self.prompt.create_prompt(user_input)
+        
+        # Get response from the conversation chain
+        response = self.conversation_chain.predict(input=formatted_prompt[0].content)
+        
+        # Parse the response
+        output_dict = self.prompt.parse_response(response)
+        return output_dict
 
 if __name__ == "__main__":
-    # Example customer queries to test the gated logic with memory
-    query1 = "Hi, I am John. I haven’t received my order yet, and it’s been delayed for days."
-    query2 = "My product is broken, and I can’t get it to work."
-    query3 = "I want to cancel my order."
-
-    llm_demo = llm_Demo()
-
-    # Testing multiple queries to demonstrate memory
-    print("Response for Query 1 (Empathy):")
-    llm_demo.initiate_chat(query1)
-
-    print("\nResponse for Query 2 (Problem-Solving):")
-    llm_demo.initiate_chat(query2)
-
-    print("\nResponse for Query 3 (Escalation):")
-    llm_demo.initiate_chat(query3)
+    llm_handler = LLMHandler()
+    tweets = ["I won the match", "That's rude", "What an idiot", "hello world in python"]
+    
+    for tweet in tweets:
+        print(f"\nInput: {tweet}")
+        result = llm_handler.handle_conversation(tweet)
+        print("Output:", result)
