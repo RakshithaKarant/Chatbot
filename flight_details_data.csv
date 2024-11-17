@@ -1,0 +1,121 @@
+flight_id,airline_name,departure_city,arrival_city,departure_time,arrival_time
+AI-BenPun,Air India,Bengaluru,Pune,08:45,11:30
+SJ-NewCha,Spice Jet,New Delhi,Chandigarh,20:35,23:30
+AI-MumHyd,Air India,Mumbai,Hyderabad,16:45,19:30
+AI-MumGoa,Air India,Mumbai,Goa,16:15,19:00
+IN-MumCha,Indigo,Mumbai,Chandigarh,13:25,16:20
+AI-BenInd,Air India,Bengaluru,Indore,08:15,11:00
+SJ-BenAhm,Spice Jet,Bengaluru,Ahmadabad,10:10,13:05
+AK-KolAhm,Akasa Air,Kolkata,Ahmadabad,17:15,19:55
+SJ-CheGoa,Spice Jet,Chennai,Goa,13:30,16:25
+SJ-NewPun,Spice Jet,New Delhi,Pune,22:15,01:10
+AI-NewPun,Air India,New Delhi,Pune,20:45,23:30
+SJ-BenPun,Spice Jet,Bengaluru,Pune,12:15,15:10
+AK-BenInd,Akasa Air,Bengaluru,Indore,19:55,22:35
+SJ-NewInd,Spice Jet,New Delhi,Indore,21:50,00:45
+SJ-BenGoa,Spice Jet,Bengaluru,Goa,11:00,13:55
+AI-MumInd,Air India,Mumbai,Indore,17:15,20:00
+AK-CheInd,Akasa Air,Chennai,Indore,17:55,20:35
+IN-NewGoa,Indigo,New Delhi,Goa,15:45,18:40
+AK-CheCha,Akasa Air,Chennai,Chandigarh,18:55,21:35
+AI-KolPun,Air India,Kolkata,Pune,14:45,17:30
+AI-BenHyd,Air India,Bengaluru,Hyderabad,07:45,10:30
+AK-KolInd,Akasa Air,Kolkata,Indore,15:55,18:35
+SJ-KolCha,Spice Jet,Kolkata,Chandigarh,15:35,18:30
+SJ-NewAhm,Spice Jet,New Delhi,Ahmadabad,20:10,23:05
+IN-KolPun,Indigo,Kolkata,Pune,12:45,15:40
+AI-MumAhm,Air India,Mumbai,Ahmadabad,15:15,18:00
+AK-KolPun,Akasa Air,Kolkata,Pune,15:35,18:15
+AK-NewAhm,Akasa Air,New Delhi,Ahmadabad,13:15,15:55
+SJ-MumAhm,Spice Jet,Mumbai,Ahmadabad,17:40,20:35
+SJ-KolAhm,Spice Jet,Kolkata,Ahmadabad,15:10,18:05
+SJ-CheCha,Spice Jet,Chennai,Chandigarh,13:05,16:00
+IN-KolCha,Indigo,Kolkata,Chandigarh,11:25,14:20
+AK-NewPun,Akasa Air,New Delhi,Pune,11:35,14:15
+SJ-KolHyd,Spice Jet,Kolkata,Hyderabad,16:25,19:20
+AK-KolGoa,Akasa Air,Kolkata,Goa,16:35,19:15
+AK-CheAhm,Akasa Air,Chennai,Ahmadabad,19:15,21:55
+IN-CheAhm,Indigo,Chennai,Ahmadabad,09:05,12:00
+AI-CheCha,Air India,Chennai,Chandigarh,09:45,12:30
+AK-NewCha,Akasa Air,New Delhi,Chandigarh,12:55,15:35
+AI-BenCha,Air India,Bengaluru,Chandigarh,06:45,09:30
+AI-MumCha,Air India,Mumbai,Chandigarh,15:45,18:30
+SJ-MumCha,Spice Jet,Mumbai,Chandigarh,18:05,21:00
+IN-KolHyd,Indigo,Kolkata,Hyderabad,12:05,15:00
+SJ-MumGoa,Spice Jet,Mumbai,Goa,18:30,21:25
+AK-BenGoa,Akasa Air,Bengaluru,Goa,20:35,23:15
+AK-ChePun,Akasa Air,Chennai,Pune,17:35,20:15
+AI-KolGoa,Air India,Kolkata,Goa,13:15,16:00
+AI-NewHyd,Air India,New Delhi,Hyderabad,19:45,22:30
+AI-KolAhm,Air India,Kolkata,Ahmadabad,12:15,15:00
+IN-BenCha,Indigo,Bengaluru,Chandigarh,07:25,10:20
+IN-NewInd,Indigo,New Delhi,Indore,16:25,19:20
+IN-BenHyd,Indigo,Bengaluru,Hyderabad,08:05,11:00
+AI-CheHyd,Air India,Chennai,Hyderabad,10:45,13:30
+SJ-MumPun,Spice Jet,Mumbai,Pune,19:45,22:40
+AK-BenPun,Akasa Air,Bengaluru,Pune,19:35,22:15
+AK-MumGoa,Akasa Air,Mumbai,Goa,14:35,17:15
+AI-NewInd,Air India,New Delhi,Indore,20:15,23:00
+AI-BenGoa,Air India,Bengaluru,Goa,07:15,10:00
+AK-KolHyd,Akasa Air,Kolkata,Hyderabad,16:15,18:55
+IN-KolAhm,Indigo,Kolkata,Ahmadabad,11:05,14:00
+AI-CheAhm,Air India,Chennai,Ahmadabad,09:15,12:00
+AK-MumInd,Akasa Air,Mumbai,Indore,13:55,16:35
+SJ-NewHyd,Spice Jet,New Delhi,Hyderabad,21:25,00:20
+IN-CheHyd,Indigo,Chennai,Hyderabad,10:05,13:00
+AI-ChePun,Air India,Chennai,Pune,11:45,14:30
+AK-BenHyd,Akasa Air,Bengaluru,Hyderabad,20:15,22:55
+AK-BenCha,Akasa Air,Bengaluru,Chandigarh,20:55,23:35
+AI-MumPun,Air India,Mumbai,Pune,17:45,20:30
+SJ-BenInd,Spice Jet,Bengaluru,Indore,11:50,14:45
+AI-KolInd,Air India,Kolkata,Indore,14:15,17:00
+IN-NewPun,Indigo,New Delhi,Pune,16:45,19:40
+IN-NewCha,Indigo,New Delhi,Chandigarh,15:25,18:20
+SJ-CheInd,Spice Jet,Chennai,Indore,14:20,17:15
+AI-NewCha,Air India,New Delhi,Chandigarh,18:45,21:30
+IN-KolInd,Indigo,Kolkata,Indore,12:25,15:20
+IN-NewHyd,Indigo,New Delhi,Hyderabad,16:05,19:00
+IN-CheCha,Indigo,Chennai,Chandigarh,09:25,12:20
+IN-CheInd,Indigo,Chennai,Indore,10:25,13:20
+AK-MumAhm,Akasa Air,Mumbai,Ahmadabad,15:15,17:55
+AK-NewHyd,Akasa Air,New Delhi,Hyderabad,12:15,14:55
+SJ-NewGoa,Spice Jet,New Delhi,Goa,21:00,23:55
+AI-NewGoa,Air India,New Delhi,Goa,19:15,22:00
+SJ-CheHyd,Spice Jet,Chennai,Hyderabad,13:55,16:50
+AI-CheInd,Air India,Chennai,Indore,11:15,14:00
+IN-NewAhm,Indigo,New Delhi,Ahmadabad,15:05,18:00
+SJ-KolPun,Spice Jet,Kolkata,Pune,17:15,20:10
+SJ-BenCha,Spice Jet,Bengaluru,Chandigarh,10:35,13:30
+AK-NewInd,Akasa Air,New Delhi,Indore,11:55,14:35
+IN-CheGoa,Indigo,Chennai,Goa,09:45,12:40
+AI-CheGoa,Air India,Chennai,Goa,10:15,13:00
+IN-MumGoa,Indigo,Mumbai,Goa,13:45,16:40
+AK-KolCha,Akasa Air,Kolkata,Chandigarh,16:55,19:35
+SJ-KolGoa,Spice Jet,Kolkata,Goa,16:00,18:55
+SJ-ChePun,Spice Jet,Chennai,Pune,14:45,17:40
+AI-BenAhm,Air India,Bengaluru,Ahmadabad,06:15,09:00
+AI-KolCha,Air India,Kolkata,Chandigarh,12:45,15:30
+AK-MumHyd,Akasa Air,Mumbai,Hyderabad,14:15,16:55
+AK-CheGoa,Akasa Air,Chennai,Goa,18:35,21:15
+AK-CheHyd,Akasa Air,Chennai,Hyderabad,18:15,20:55
+IN-MumPun,Indigo,Mumbai,Pune,14:45,17:40
+AI-KolHyd,Air India,Kolkata,Hyderabad,13:45,16:30
+IN-BenInd,Indigo,Bengaluru,Indore,08:25,11:20
+IN-MumInd,Indigo,Mumbai,Indore,14:25,17:20
+AK-MumPun,Akasa Air,Mumbai,Pune,13:35,16:15
+IN-MumHyd,Indigo,Mumbai,Hyderabad,14:05,17:00
+IN-BenGoa,Indigo,Bengaluru,Goa,07:45,10:40
+AI-NewAhm,Air India,New Delhi,Ahmadabad,18:15,21:00
+SJ-MumInd,Spice Jet,Mumbai,Indore,19:20,22:15
+SJ-BenHyd,Spice Jet,Bengaluru,Hyderabad,11:25,14:20
+AK-BenAhm,Akasa Air,Bengaluru,Ahmadabad,21:05,23:45
+SJ-KolInd,Spice Jet,Kolkata,Indore,16:50,19:45
+SJ-CheAhm,Spice Jet,Chennai,Ahmadabad,12:40,15:35
+SJ-MumHyd,Spice Jet,Mumbai,Hyderabad,18:55,21:50
+IN-BenAhm,Indigo,Bengaluru,Ahmadabad,07:05,10:00
+IN-BenPun,Indigo,Bengaluru,Pune,08:45,11:40
+IN-ChePun,Indigo,Chennai,Pune,10:45,13:40
+IN-KolGoa,Indigo,Kolkata,Goa,11:45,14:40
+AK-MumCha,Akasa Air,Mumbai,Chandigarh,14:55,17:35
+IN-MumAhm,Indigo,Mumbai,Ahmadabad,13:05,16:00
+AK-NewGoa,Akasa Air,New Delhi,Goa,12:35,15:15
