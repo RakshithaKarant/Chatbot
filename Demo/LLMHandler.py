@@ -6,7 +6,7 @@ from langchain.chains import ConversationChain
 from CustomPrompt import CustomPrompt
 
 class LLMHandler:
-    def __init__(self):
+    def __init__(self, memory=None):
         load_dotenv()
         TOKEN = os.getenv("HF_TOKEN")
         if not TOKEN:
@@ -22,8 +22,8 @@ class LLMHandler:
             model_kwargs=model_kwargs
         )
         
-        # Initialize conversation memory and chain without verbosity
-        self.memory = ConversationBufferMemory()
+        # Use provided memory or create a new one
+        self.memory = memory or ConversationBufferMemory()
         self.conversation_chain = ConversationChain(
             llm=self.llm,
             memory=self.memory,
@@ -35,10 +35,9 @@ class LLMHandler:
     def handle_conversation(self, user_input: str):
         # Create formatted prompt messages
         formatted_prompt = self.prompt.create_prompt(user_input)
-        
         # Get response from the conversation chain
         response = self.conversation_chain.predict(input=formatted_prompt[0].content)
-        
+        self.memory.save_context({"input": formatted_prompt[0].content}, {"outputs": response})
         # Parse the response
         output_dict = self.prompt.parse_response(response)
         return output_dict
