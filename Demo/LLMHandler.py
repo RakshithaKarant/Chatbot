@@ -1,24 +1,23 @@
 import os
-import pandas as pd
+import re
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
-from langchain_community.embeddings import HuggingFaceHubEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.embeddings import OpenAIEmbeddings
+from RAG import Retrieval
 from CustomPrompt import CustomPrompt
+import time
 
 class LLMHandler:
-    def __init__(self, memory=None, persist_directory="chroma_storage"):
+    def __init__(self, memory: ConversationBufferMemory = None):
         load_dotenv()
-        TOKEN = os.getenv("HF_TOKEN")
-        if not TOKEN:
+        token = os.getenv("HF_TOKEN")
+        if not token:
             raise ValueError("HF_TOKEN environment variable is not set.")
         
         # Initialize Hugging Face LLM
         self._repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
-        model_kwargs = {"max_length": 128, "token": TOKEN}
+        model_kwargs = {"max_length": 512, "token": token}
         self.llm = HuggingFaceEndpoint(
             repo_id=self._repo_id,
             temperature=0.5,
@@ -30,59 +29,74 @@ class LLMHandler:
         self.conversation_chain = ConversationChain(
             llm=self.llm,
             memory=self.memory,
-            verbose=False  
+            verbose=False
         )
         
-        # Load and index CSV data with Chroma
-        self.retriever = self._initialize_chroma_retriever("synthetic_airline_data.csv", persist_directory)
+        # Initialize prompt handler
         self.prompt = CustomPrompt()
 
-    def _initialize_chroma_retriever(self, csv_path, persist_directory):
-        """Load CSV data and initialize a Chroma retriever."""
-        # Load CSV
-        df = pd.read_csv(csv_path)
-        
-        # Combine necessary fields into a descriptive string
-        df['combined'] = df.apply(
-            lambda row: f"Customer customer_id - {row['customer_id']} name - ({row['name']}): Flight {row['flight_id']} with {row['airline_name']} from {row['departure_city']} to {row['arrival_city']} on {row['departure_date']}. Booking ID: {row['booking_id']}.",
-            axis=1
-        )
-        
-        # Initialize embeddings
-        embeddings = HuggingFaceHubEmbeddings()
-        
-        # Check if ChromaDB already exists for persistence
-        if os.path.exists(persist_directory):
-            # Load existing ChromaDB
-            vector_store = Chroma(
-                persist_directory=persist_directory,
-                embedding_function=embeddings
-            )
-        else:
-            # Create ChromaDB and index data
-            vector_store = Chroma.from_texts(
-                texts=df.head(1000)['combined'].tolist(),
-                embedding=embeddings,
-                persist_directory=persist_directory
-            )
-            # Persist the vector store to disk
-            vector_store.persist()
-        
-        return vector_store.as_retriever(search_kwargs={"k": 3})  # Retrieve top 3 results
+    def is_relevant(self, user_input: str) -> bool:
+        """Check if the user input is relevant for additional details retrieval."""
+        patterns = [
+            r'flight id', r'booking id', r'phone number', r'name of'
+        ]
+        return any(re.search(pattern, user_input, re.IGNORECASE) for pattern in patterns)
 
-    def handle_conversation(self, user_input: str):
+    def summarize_important_details(self, text: str, max_tokens: int = 20) -> str:
+        """Summarize and retain only the important details from the text within a max token limit."""
+        lines = text.split('\n')
+        important_lines = []
+        current_tokens = 0
+        
+        for line in lines:
+            if any(keyword in line.lower() for keyword in ['customer id', 'flight id', 'booking id', 'phone number', 'name']):
+                # Count tokens in line
+                line_tokens = len(line.split())
+                if current_tokens + line_tokens > max_tokens:
+                    break
+                important_lines.append(line)
+                current_tokens += line_tokens
+                
+        return "\n".join(important_lines)
+
+    def handle_conversation(self, user_input: str) -> dict:
         """Handle user input and generate a response using RAG."""
-        # Retrieve relevant data
-        relevant_context = self.retriever.get_relevant_documents(user_input)
-        context_text = " ".join([doc.page_content for doc in relevant_context])
         
-        # Create prompt with retrieved context
+        context_text = ""
+        
+        if self.is_relevant(user_input):
+            # Start timer for retrieval
+            start_time = time.time()
+            context_text = Retrieval.get_additional_details(user_input)
+            retrieval_time = time.time() - start_time
+            print(f"Retrieval time: {retrieval_time:.4f} seconds")
+        
+        # Start timer for prompt creation
+        start_time = time.time()
         formatted_prompt = self.prompt.create_prompt(user_input, additional_context=context_text)
+        prompt_creation_time = time.time() - start_time
+        print(f"Prompt creation time: {prompt_creation_time:.4f} seconds")
         
-        # Get response from the conversation chain
+        # Start timer for LLM response generation
+        start_time = time.time()
         response = self.conversation_chain.predict(input=formatted_prompt[0].content)
-        self.memory.save_context({"input": formatted_prompt[0].content}, {"outputs": response})
+        llm_response_time = time.time() - start_time
+        print(f"LLM response time: {llm_response_time:.4f} seconds")
         
-        # Parse the response
+        # Summarize important details before saving to memory
+        summarized_input = self.summarize_important_details(formatted_prompt[0].content)
+        summarized_response = self.summarize_important_details(response)
+        
+        # Start timer for saving context
+        start_time = time.time()
+        self.memory.save_context({"input": summarized_input}, {"outputs": summarized_response})
+        context_saving_time = time.time() - start_time
+        print(f"Context saving time: {context_saving_time:.4f} seconds")
+        
+        # Start timer for response parsing
+        start_time = time.time()
         output_dict = self.prompt.parse_response(response)
+        response_parsing_time = time.time() - start_time
+        print(f"Response parsing time: {response_parsing_time:.4f} seconds")
+        
         return output_dict
