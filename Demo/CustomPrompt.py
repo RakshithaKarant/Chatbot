@@ -4,7 +4,7 @@ import json
 
 class CustomPrompt:
     def __init__(self):
-        # Output parsing
+        # Define response schemas for output parsing
         self.sentiment = ResponseSchema(
             name="sentiment",
             description="Analyze sentiment state if user is angry/sad/neutral/happy/excited."
@@ -17,10 +17,9 @@ class CustomPrompt:
             [self.sentiment, self.response]
         )
 
-    def create_prompt(self, text: str, additional_context: str = ""):
-        # Ensure additional context is a non-empty string
-        additional_context = additional_context if additional_context else "No additional context available."
-
+    def create_prompt(self, text: str, additional_context: str = "") -> list:
+        """Create a formatted prompt with additional context."""
+        additional_context = additional_context or "No additional context available."
         format_instructions = self.output_parser.get_format_instructions()
         review_template = """
         The following text is a tweet from a user.
@@ -35,7 +34,6 @@ class CustomPrompt:
 
         {format_instructions}
         """
-        # Create and format the chat prompt
         prompt = ChatPromptTemplate.from_template(template=review_template)
         messages = prompt.format_messages(
             text=text,
@@ -44,13 +42,12 @@ class CustomPrompt:
         )
         return messages
 
-    def parse_response(self, response: str):
+    def parse_response(self, response: str) -> dict:
+        """Parse the LLM's response into a structured format."""
         try:
-            # Attempt to parse the response using the output parser
             parsed_output = self.output_parser.parse(response)
             return parsed_output
         except json.JSONDecodeError as e:
-            # Handle JSON decoding issues
             print(f"Error parsing JSON response: {e}")
             return {
                 "error": "JSONDecodeError",
@@ -58,7 +55,6 @@ class CustomPrompt:
                 "raw_response": response
             }
         except ValueError as e:
-            # Handle other value-related parsing issues
             print(f"Error parsing structured output: {e}")
             return {
                 "error": "ValueError",
