@@ -1,12 +1,14 @@
 import os
 import re
+import time
+import logging
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
+from transformers import AutoTokenizer
 from RAG import Retrieval
 from CustomPrompt import CustomPrompt
-import time
 
 class LLMHandler:
     def __init__(self, memory: ConversationBufferMemory = None):
@@ -17,7 +19,7 @@ class LLMHandler:
         
         # Initialize Hugging Face LLM
         self._repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
-        model_kwargs = {"max_length": 512, "token": token}
+        model_kwargs = {"max_length": 500, "token": token}
         self.llm = HuggingFaceEndpoint(
             repo_id=self._repo_id,
             temperature=0.5,
@@ -32,17 +34,24 @@ class LLMHandler:
             verbose=False
         )
         
-        # Initialize prompt handler
+        # Initialize tokenizer for managing token limits
+        self.tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.2")
+        self.max_tokens = 500  # Limit for the model
         self.prompt = CustomPrompt()
 
-    def is_relevant(self, user_input: str) -> bool:
+    @staticmethod
+    def is_relevant(user_input: str) -> bool:
         """Check if the user input is relevant for additional details retrieval."""
-        patterns = [
-            r'flight id', r'booking id', r'phone number', r'name of'
-        ]
+        patterns = [r'flight id', r'booking id', r'phone number', r'name of']
         return any(re.search(pattern, user_input, re.IGNORECASE) for pattern in patterns)
 
-    def summarize_important_details(self, text: str, max_tokens: int = 20) -> str:
+    def truncate_to_max_tokens(self, text: str, max_tokens: int = None) -> str:
+        """Truncate the input text to ensure it stays within the token limit."""
+        max_tokens = max_tokens or self.max_tokens
+        tokens = self.tokenizer.encode(text, truncation=True, max_length=max_tokens)
+        return self.tokenizer.decode(tokens, skip_special_tokens=True)
+
+    def summarize_important_details(self, text: str, max_tokens: int = 500) -> str:
         """Summarize and retain only the important details from the text within a max token limit."""
         lines = text.split('\n')
         important_lines = []
@@ -50,8 +59,7 @@ class LLMHandler:
         
         for line in lines:
             if any(keyword in line.lower() for keyword in ['customer id', 'flight id', 'booking id', 'phone number', 'name']):
-                # Count tokens in line
-                line_tokens = len(line.split())
+                line_tokens = len(self.tokenizer.encode(line, truncation=True))
                 if current_tokens + line_tokens > max_tokens:
                     break
                 important_lines.append(line)
@@ -61,42 +69,53 @@ class LLMHandler:
 
     def handle_conversation(self, user_input: str) -> dict:
         """Handle user input and generate a response using RAG."""
-        
         context_text = ""
         
         if self.is_relevant(user_input):
             # Start timer for retrieval
             start_time = time.time()
             context_text = Retrieval.get_additional_details(user_input)
-            retrieval_time = time.time() - start_time
-            print(f"Retrieval time: {retrieval_time:.4f} seconds")
+            print(f"Retrieval time: {time.time() - start_time:.4f} seconds")
         
-        # Start timer for prompt creation
+        # Create prompt
         start_time = time.time()
-        formatted_prompt = self.prompt.create_prompt(user_input, additional_context=context_text)
-        prompt_creation_time = time.time() - start_time
-        print(f"Prompt creation time: {prompt_creation_time:.4f} seconds")
+        raw_prompt = self.prompt.create_prompt(user_input, additional_context=context_text)
+        truncated_prompt = self.truncate_to_max_tokens(raw_prompt[0].content)
+        print(f"Prompt creation time: {time.time() - start_time:.4f} seconds")
         
-        # Start timer for LLM response generation
+        # Generate response
         start_time = time.time()
-        response = self.conversation_chain.predict(input=formatted_prompt[0].content)
-        llm_response_time = time.time() - start_time
-        print(f"LLM response time: {llm_response_time:.4f} seconds")
+        response = self.conversation_chain.predict(input=truncated_prompt)
+        truncated_response = self.truncate_to_max_tokens(response)
+        print(f"LLM response time: {time.time() - start_time:.4f} seconds")
         
-        # Summarize important details before saving to memory
-        summarized_input = self.summarize_important_details(formatted_prompt[0].content)
-        summarized_response = self.summarize_important_details(response)
+        # Summarize inputs and responses
+        summarized_input = self.summarize_important_details(truncated_prompt)
+        summarized_response = self.summarize_important_details(truncated_response)
         
-        # Start timer for saving context
+        # Save context
         start_time = time.time()
         self.memory.save_context({"input": summarized_input}, {"outputs": summarized_response})
-        context_saving_time = time.time() - start_time
-        print(f"Context saving time: {context_saving_time:.4f} seconds")
+        print(f"Context saving time: {time.time() - start_time:.4f} seconds")
         
-        # Start timer for response parsing
+        # Parse response
         start_time = time.time()
-        output_dict = self.prompt.parse_response(response)
-        response_parsing_time = time.time() - start_time
-        print(f"Response parsing time: {response_parsing_time:.4f} seconds")
+        output_dict = self.prompt.parse_response(truncated_response)
+        print(f"Response parsing time: {time.time() - start_time:.4f} seconds")
         
         return output_dict
+
+# Set up logging to suppress debug messages
+logging.basicConfig(level=logging.WARNING)  # Only show warnings and errors
+
+if __name__ == "__main__":
+    llm_handler = LLMHandler()
+    tweets = [
+        "What is the status of my flight booked in the name of Samantha Guerra and booking id is 41486539?",
+        "What is my booking id?"
+    ]
+
+    for tweet in tweets:
+        print(f"\nInput: {tweet}")
+        result = llm_handler.handle_conversation(tweet)
+        print("Output:", result)
