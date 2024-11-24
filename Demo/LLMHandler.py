@@ -7,7 +7,7 @@ from langchain_huggingface import HuggingFaceEndpoint
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from transformers import AutoTokenizer
-from RAG import Retrieval
+import  Insights
 from CustomPrompt import CustomPrompt
 
 class LLMHandler:
@@ -69,13 +69,8 @@ class LLMHandler:
 
     def handle_conversation(self, user_input: str) -> dict:
         """Handle user input and generate a response using RAG."""
-        context_text = ""
-        
-        if self.is_relevant(user_input):
-            # Start timer for retrieval
-            start_time = time.time()
-            context_text = Retrieval.get_additional_details(user_input)
-            print(f"Retrieval time: {time.time() - start_time:.4f} seconds")
+    
+        context_text=Insights.get_additional_context(user_input)
         
         # Create prompt
         start_time = time.time()
