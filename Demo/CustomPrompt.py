@@ -37,10 +37,15 @@ class CustomPrompt:
         )
         return messages
 
-    def parse_response(self, response: str) -> dict:
+    def parse_response(self, response: str):
         """Parse the LLM's response into a structured format."""
         try:
-            return self.output_parser.parse(response)
+            response_=self.output_parser.parse(response)
+            if type(response_) is str:
+                return {
+                "response": response_
+            }
+            return response_
         except (json.JSONDecodeError, ValueError) as e:
             print(f"Error parsing structured output: {response}")
             return {
