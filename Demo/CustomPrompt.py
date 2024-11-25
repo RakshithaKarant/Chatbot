@@ -5,13 +5,12 @@ import json
 class CustomPrompt:
     def __init__(self):
         # Define response schemas for output parsing
-       
         self.response = ResponseSchema(
             name="response",
-            description="Provide a professional response to the user's query within the airlines travel domain."
+            description="Respond to the user's query within the airlines travel domain."
         )
         self.output_parser = StructuredOutputParser.from_response_schemas(
-            [ self.response]
+            [self.response]
         )
 
     def create_prompt(self, text: str, additional_context: str = "") -> list:
@@ -24,7 +23,7 @@ class CustomPrompt:
         Additional context: {additional_context}
         
         Extract the following information:
-        - response: Provide a professional response to the user's query within the travel domain along with additional_context if available.
+        - response: Respond to the user's query within the airlines travel domain.
 
         Text: {text}
 
@@ -44,7 +43,6 @@ class CustomPrompt:
             return self.output_parser.parse(response)
         except (json.JSONDecodeError, ValueError) as e:
             print(f"Error parsing structured output: {response}")
-        
             return {
-                "response": "unexpected error occured try again"
+                "response": "An unexpected error occurred. Please try again."
             }
