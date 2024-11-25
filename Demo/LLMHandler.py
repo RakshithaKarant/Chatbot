@@ -7,7 +7,7 @@ from langchain_huggingface import HuggingFaceEndpoint
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from transformers import AutoTokenizer
-import  Insights
+from Insights import InsightDeriver, get_additional_context
 from CustomPrompt import CustomPrompt
 
 class LLMHandler:
@@ -38,6 +38,7 @@ class LLMHandler:
         self.tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.2")
         self.max_tokens = 500  # Limit for the model
         self.prompt = CustomPrompt()
+        self.insight_deriver = InsightDeriver()
 
     @staticmethod
     def is_relevant(user_input: str) -> bool:
@@ -70,7 +71,7 @@ class LLMHandler:
     def handle_conversation(self, user_input: str) -> dict:
         """Handle user input and generate a response using RAG."""
     
-        context_text=Insights.get_additional_context(user_input)
+        context_text = get_additional_context(user_input)
         
         # Create prompt
         start_time = time.time()
@@ -100,17 +101,6 @@ class LLMHandler:
         
         return output_dict
 
-# Set up logging to suppress debug messages
-logging.basicConfig(level=logging.WARNING)  # Only show warnings and errors
-
-if __name__ == "__main__":
-    llm_handler = LLMHandler()
-    tweets = [
-        "What is the status of my flight booked in the name of Samantha Guerra and booking id is 41486539?",
-        "What is my booking id?"
-    ]
-
-    for tweet in tweets:
-        print(f"\nInput: {tweet}")
-        result = llm_handler.handle_conversation(tweet)
-        print("Output:", result)
+    def save_user_details(self, user_details):
+        """Save user details in memory."""
+        self.memory.save_context({"user_details": user_details}, {"outputs": ""})

@@ -10,6 +10,8 @@ def format_json_to_html(response_dict):
     """
     Convert the JSON response to an HTML string with <br> separation for display.
     """
+    if type(response_dict) is list and len(response_dict)>0:
+        response_dict=response_dict[0]
     html_output = "<br>".join(f"<b>{key}:</b> {value}" for key, value in response_dict.items())
     return html_output
 
@@ -65,8 +67,10 @@ if prompt := st.chat_input("Type your message here. Type exit to quit"):
                     if booking_id:
                         user_details = st.session_state["InsightDeriver"].user_details_by_booking_id(int(booking_id))
                         if user_details:
-                            response_html = f"The details for booking ID {booking_id} are as follows: {user_details}. Please provide your query"
+                            details = format_json_to_html(user_details)
+                            response_html = f"The details for booking ID {booking_id} are as follows:<br/> {details}. <br/> Please provide your query"
                             st.session_state["booking_id"] = booking_id
+                            llm_handler.save_user_details(user_details)  # Save user details in memory
                         else:
                             response_html = f"No matching records found for the booking ID {booking_id}."
                     else:
