@@ -1,7 +1,5 @@
 import os
 import re
-import time
-import logging
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain.memory import ConversationBufferMemory
@@ -74,33 +72,34 @@ class LLMHandler:
         context_text = get_additional_context(user_input)
         
         # Create prompt
-        start_time = time.time()
         raw_prompt = self.prompt.create_prompt(user_input, additional_context=context_text)
         truncated_prompt = self.truncate_to_max_tokens(raw_prompt[0].content)
-        print(f"Prompt creation time: {time.time() - start_time:.4f} seconds")
+    #Handle truncation to include both system and human messages
         
-        # Generate response
-        start_time = time.time()
-        response = self.conversation_chain.predict(input=truncated_prompt)
-        truncated_response = self.truncate_to_max_tokens(response)
-        print(f"LLM response time: {time.time() - start_time:.4f} seconds")
+        # Summarize human input
+        summarized_input = self.summarize_important_details(user_input)
         
-        # Summarize inputs and responses
-        summarized_input = self.summarize_important_details(truncated_prompt)
-        summarized_response = self.summarize_important_details(truncated_response)
+        retry_count = 3
+        output_dict = {"response": ""}
         
-        # Save context
-        start_time = time.time()
-        self.memory.save_context({"input": summarized_input}, {"outputs": summarized_response})
-        print(f"Context saving time: {time.time() - start_time:.4f} seconds")
-        
-        # Parse response
-        start_time = time.time()
-        output_dict = self.prompt.parse_response(truncated_response)
-        print(f"Response parsing time: {time.time() - start_time:.4f} seconds")
+        while retry_count > 0:
+            try:
+                response = self.conversation_chain.predict(input=truncated_prompt)
+                truncated_response = self.truncate_to_max_tokens(response)
+                summarized_response = self.summarize_important_details(truncated_response)
+                output_dict = self.prompt.parse_response(truncated_response)
+                
+                if "An unexpected error occurred" in output_dict["response"]:
+                    raise Exception()
+                
+                retry_count = 0
+                self.memory.save_context({"input": summarized_input}, {"outputs": summarized_response})
+            except Exception as e:
+                retry_count -= 1
         
         return output_dict
 
     def save_user_details(self, user_details):
         """Save user details in memory."""
         self.memory.save_context({"user_details": user_details}, {"outputs": ""})
+

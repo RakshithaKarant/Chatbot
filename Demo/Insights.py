@@ -114,7 +114,11 @@ class InsightDeriver:
 
 def get_additional_context(query: str):
     insight_deriver = InsightDeriver()
-    return insight_deriver.process_query(query)
+    try:
+        return insight_deriver.process_query(query)
+    except:
+        pass
+    return None
 
 
 if __name__ == "__main__":
