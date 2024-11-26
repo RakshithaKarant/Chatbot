@@ -5,7 +5,7 @@ from LLMHandler import LLMHandler
 logging.basicConfig(level=logging.WARNING)  # Only show warnings and errors
 if __name__ == "__main__":
     llm_handler = LLMHandler()
-    tweets = ["Count of airlines in Air India"]
+    tweets = ["write hello world in python"]
 
     for tweet in tweets:
         print(f"\nInput: {tweet}")

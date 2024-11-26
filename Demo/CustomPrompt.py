@@ -18,7 +18,7 @@ class CustomPrompt:
         additional_context = additional_context or "No additional context available."
         format_instructions = self.output_parser.get_format_instructions()
         review_template = """
-        The following text is a query from a user regarding a booking ID.
+        The following text is a query from a user.
         
         Additional context: {additional_context}
         
@@ -49,5 +49,5 @@ class CustomPrompt:
         except (json.JSONDecodeError, ValueError) as e:
             print(f"Error parsing structured output: {response}")
             return {
-                "response": "An unexpected error occurred. Please try again."
+                "response": "An unexpected error occurred. Please try again with relevent question."
             }
