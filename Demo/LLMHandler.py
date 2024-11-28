@@ -74,7 +74,7 @@ class LLMHandler:
         # Create prompt
         raw_prompt = self.prompt.create_prompt(user_input, additional_context=context_text)
         truncated_prompt = self.truncate_to_max_tokens(raw_prompt[0].content)
-    #Handle truncation to include both system and human messages
+        #Handle truncation to include both system and human messages
         
         # Summarize human input
         summarized_input = self.summarize_important_details(user_input)
@@ -102,4 +102,3 @@ class LLMHandler:
     def save_user_details(self, user_details):
         """Save user details in memory."""
         self.memory.save_context({"user_details": user_details}, {"outputs": ""})
-

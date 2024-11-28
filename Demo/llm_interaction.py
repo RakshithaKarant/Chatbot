@@ -39,23 +39,22 @@ for msg in st.session_state["messages"]:
     st.chat_message(msg["role"]).write(msg["content"], unsafe_allow_html=True)
 
 # Input box for new messages
-if prompt := st.chat_input("Type your message here. Type exit to quit"):
+if prompt := st.chat_input("Type your message here. Type exit to end the session"):
     # Add user message to the chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt, unsafe_allow_html=True)
 
     if str(prompt).strip().lower() == "exit":
         # Reset session state variables
-        st.session_state["llm_handler"] = None
-        st.session_state["booking_id"] = ""
-        st.session_state["InsightDeriver"] = None
-        st.session_state["messages"] = [{"role": "assistant", "content": "Please provide your Booking ID"}]
-        
         # Clear conversation memory
         st.session_state["conversation_memory"] = None
-        
+        memory = st.session_state.get("conversation_memory", None)
+        st.session_state["llm_handler"] = LLMHandler(memory=memory)
+        st.session_state["booking_id"] = ""
+        st.session_state["InsightDeriver"] = InsightDeriver()
+        st.session_state["messages"] = [{"role": "assistant", "content": "Please provide your Booking ID"}]
         # Reload the page
-        st.experimental_rerun()
+        st.rerun()
     else:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
@@ -68,7 +67,8 @@ if prompt := st.chat_input("Type your message here. Type exit to quit"):
                         user_details = st.session_state["InsightDeriver"].user_details_by_booking_id(int(booking_id))
                         if user_details:
                             details = format_json_to_html(user_details)
-                            response_html = f"The details for booking ID {booking_id} are as follows:<br/> {details}. <br/> Please provide your query"
+                            name = user_details[0]['name'] if type(user_details) is list else ""
+                            response_html = f"Hi {user_details[0]['name']}. How may I help you?"
                             st.session_state["booking_id"] = booking_id
                             llm_handler.save_user_details(user_details)  # Save user details in memory
                         else:

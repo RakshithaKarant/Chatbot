@@ -20,9 +20,13 @@ class InsightDeriver:
             'payment_method_distribution': self.payment_method_distribution,
             'airline_bookings': self.airline_bookings,
             'additional_services_distribution': self.additional_services_distribution,
-            'status_summary': self.status_summary,
-            'departure_time_distribution': self.departure_time_distribution,
-            'arrival_time_distribution': self.arrival_time_distribution,
+            'most_frequent_flyer': self.most_frequent_flyer,
+            'booking_trend': self.booking_trend,
+            'revenue_per_airline': self.revenue_per_airline,
+            'top_customers_by_spending': self.top_customers_by_spending,
+            'customer_booking_frequency': self.customer_booking_frequency,
+            'popular_departure_dates': self.popular_departure_dates,
+            'popular_arrival_dates': self.popular_arrival_dates
         }
         self.insight_descriptions = list(self.insight_methods.keys())
         self.vector_db = self.load_or_build_vector_db(self.vector_db_path)
@@ -95,6 +99,38 @@ class InsightDeriver:
     def arrival_time_distribution(self):
         self.data['arrival_time'] = pd.to_datetime(self.data['arrival_time'], format='%H:%M').dt.hour
         return self.data['arrival_time'].value_counts().sort_index()
+    
+    # New methods for additional insights
+    def most_frequent_flyer(self):
+        frequent_flyer = self.data['customer_id'].value_counts().idxmax()
+        return self.data[self.data['customer_id'] == frequent_flyer]['name'].iloc[0], frequent_flyer
+
+    def booking_trend(self):
+        self.data['booking_date'] = pd.to_datetime(self.data['booking_date'])
+        return self.data.groupby(self.data['booking_date'].dt.to_period('M')).size()
+
+    def revenue_per_airline(self):
+        return self.data.groupby('airline_name')['ticket_price'].sum()
+
+    def top_customers_by_spending(self, top_n=5):
+        top_customers = self.data.groupby('customer_id')['ticket_price'].sum().nlargest(top_n)
+        return self.data[self.data['customer_id'].isin(top_customers.index)][['customer_id', 'name', 'ticket_price']].drop_duplicates()
+
+    def flight_duration_distribution(self):
+        self.data['departure_time'] = pd.to_datetime(self.data['departure_time'], format='%H:%M')
+        self.data['arrival_time'] = pd.to_datetime(self.data['arrival_time'], format='%H:%M')
+        self.data['flight_duration'] = (self.data['arrival_time'] - self.data['departure_time']).dt.total_seconds() / 3600
+        return self.data['flight_duration'].describe()
+
+    def customer_booking_frequency(self):
+        return self.data['customer_id'].value_counts().describe()
+
+    def popular_departure_dates(self):
+        self.data['departure_date'] = pd.to_datetime(self.data['departure_date'])
+        return self.data['departure_date'].dt.date.value_counts().head()
+
+    def popular_arrival_dates(self):
+        return self.data['arrival_time'].dt.date.value_counts().head()
 
     def process_query(self, query: str):
         best_match_index = self.query_vector_db(query)
@@ -119,11 +155,3 @@ def get_additional_context(query: str):
     except:
         pass
     return None
-
-
-if __name__ == "__main__":
-    insight_deriver = InsightDeriver()
-    data = insight_deriver.user_details_by_booking_id("16018610")
-    if data:
-        print(data)
-    print(insight_deriver.process_query("what are the most popular route"))
